@@ -1,6 +1,4 @@
-# Projeto Legacy - E-commerce Monolítico 
-
-Este projeto simula um backend de e-commerce com código "legado". Ele funciona, mas possui graves problemas de design que dificultam a manutenção e expansão.
+# E-commerce SOLID — Projeto 2
 
 ## Estrutura de Diretórios
 
@@ -15,7 +13,7 @@ Este projeto simula um backend de e-commerce com código "legado". Ele funciona,
 * `prisma/`: Configuração do banco de dados SQLite e script de seed.
 * `prisma/seed.ts`: Popula o banco com dados iniciais.
 
-## Instalação e Configuração
+## Como Rodar
 
 Siga os passos abaixo (na raiz do projeto) para preparar o ambiente:
 
@@ -90,134 +88,7 @@ curl -X POST http://localhost:3000/orders \
 }'
 ```
 
-### Cenário 3: Livro Físico com 2 unidades (Cartão de Crédito)
-Resultado esperado: total de R$ 210,00 (`100 × 2 + 10` de frete). A resposta traz `orderId` e `emailPreview`.
-
-```bash
-curl -X POST http://localhost:3000/orders \
--H "Content-Type: application/json" \
--d '{
-  "customer": "teste@email.com",
-  "items": [{ "productId": 1, "quantity": 2 }],
-  "paymentMethod": "credit_card",
-  "paymentDetails": { "cardNumber": "4111111111111111", "cvv": "123" }
-}'
-```
-
-### Cenário 4: E-book com 2 unidades (Cartão de Débito)
-Resultado esperado: total de R$ 100,00 (`50 × 2`, sem frete).
-
-```bash
-curl -X POST http://localhost:3000/orders \
--H "Content-Type: application/json" \
--d '{
-  "customer": "teste@email.com",
-  "items": [{ "productId": 2, "quantity": 2 }],
-  "paymentMethod": "debit_card",
-  "paymentDetails": {}
-}'
-```
-
-### Cenário 5: Pagamento com Pix (prova do OCP)
-Resultado esperado: sucesso, com `orderId` e `emailPreview`, sem nenhuma alteração no `OrderService`.
-
-```bash
-curl -X POST http://localhost:3000/orders \
--H "Content-Type: application/json" \
--d '{
-  "customer": "teste@email.com",
-  "items": [{ "productId": 1, "quantity": 1 }],
-  "paymentMethod": "pix",
-  "paymentDetails": {}
-}'
-```
-
-### Cenário 6: Carrinho vazio
-Resultado esperado: erro 400 com `{"error":"Carrinho vazio"}`.
-
-```bash
-curl -X POST http://localhost:3000/orders \
--H "Content-Type: application/json" \
--d '{
-  "customer": "teste@email.com",
-  "items": [],
-  "paymentMethod": "pix",
-  "paymentDetails": {}
-}'
-```
-
-### Cenário 7: Produto inexistente
-Resultado esperado: erro 400 com `{"error":"Produto 99 não encontrado"}`.
-
-```bash
-curl -X POST http://localhost:3000/orders \
--H "Content-Type: application/json" \
--d '{
-  "customer": "teste@email.com",
-  "items": [{ "productId": 99, "quantity": 1 }],
-  "paymentMethod": "pix",
-  "paymentDetails": {}
-}'
-```
-
-### Cenário 8: Método de pagamento não suportado
-Resultado esperado: erro 400 com `{"error":"Método de pagamento não suportado"}`.
-
-```bash
-curl -X POST http://localhost:3000/orders \
--H "Content-Type: application/json" \
--d '{
-  "customer": "teste@email.com",
-  "items": [{ "productId": 1, "quantity": 1 }],
-  "paymentMethod": "boleto",
-  "paymentDetails": {}
-}'
-```
-
-### Cenário 9: Cartão recusado (CVV 000)
-Resultado esperado: erro 500 com `{"error":"Erro interno"}` (mesmo comportamento do código original).
-
-```bash
-curl -X POST http://localhost:3000/orders \
--H "Content-Type: application/json" \
--d '{
-  "customer": "teste@email.com",
-  "items": [{ "productId": 1, "quantity": 1 }],
-  "paymentMethod": "credit_card",
-  "paymentDetails": { "cardNumber": "4111111111111111", "cvv": "000" }
-}'
-```
-
----
-
-## Sugestões de Melhoria
-
-O objetivo deste trabalho é refatorar o `OrderController` aplicando os princípios SOLID. Abaixo estão as sugestões do que deve ser feito:
-
-### 1. Separação de Responsabilidades (SRP) e Camadas
-O Controller atual mistura regras de negócio com detalhes de infraestrutura.
-* **Infraestrutura de Email:** O `nodemailer` é uma ferramenta externa e não deve estar no meio da regra de negócio.
-    * *Sugestão:* Crie uma interface `IMailProvider` e uma implementação `EtherealMailProvider`.
-    * *Sugestão:* Crie um `NotificationService` (Business) que monta a mensagem e chama o Provider.
-* **Persistência:** O Service não deve conhecer o Prisma diretamente.
-    * *Sugestão:* Crie uma interface `IOrderRepository` (Contrato) e uma implementação `PrismaOrderRepository`.
-
-### 2. Extensibilidade de Pagamentos (OCP)
-O sistema deve estar "Aberto para extensão, mas fechado para modificação".
-* **Problema:** Adicionar "Pix" hoje exige mudar `if/else` dentro do código principal.
-* **Solução:** Crie uma interface `IPaymentMethod` com um método `process()`. Crie classes concretas (`CreditCardPayment`, `PixPayment`) que implementam essa interface.
-
-### 3. Hierarquia de Produtos (LSP)
-Este é o ponto mais crítico da lógica de negócio.
-* **Problema:** O código verifica `if (product.type === 'physical')` para cobrar frete.
-* **Solução:**
-    1. Crie uma classe abstrata ou interface `Product` com um método `calculateFreight()`.
-    2. Crie classes concretas: `PhysicalProduct` (cobra frete) e `DigitalProduct` (frete zero).
-    3. **Importante:** Crie uma Factory ou Mapper para converter o JSON do banco nessas classes ricas antes de processar o pedido.
-
----
-
-## Árvore de Arquivos Nova (Pós-Refatoração)
+## Árvore de Arquivos (Pós-Refatoração)
 
 ```text
 src/
