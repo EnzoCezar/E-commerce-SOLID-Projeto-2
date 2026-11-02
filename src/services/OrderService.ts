@@ -1,3 +1,5 @@
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../container/types';
 import { BusinessError } from '../domain/BusinessError';
 import { ProductFactory } from '../domain/ProductFactory';
 import logger from '../lib/logger';
@@ -24,13 +26,14 @@ export interface ProcessOrderResult {
   emailPreview: string | false;
 }
 
+@injectable()
 export class OrderService {
   constructor(
-    private readonly orderRepository: IOrderRepository,
-    private readonly productRepository: IProductRepository,
-    private readonly productFactory: ProductFactory,
-    private readonly paymentMethods: PaymentMethodRegistry,
-    private readonly notificationService: NotificationService,
+    @inject(TYPES.OrderRepository) private readonly orderRepository: IOrderRepository,
+    @inject(TYPES.ProductRepository) private readonly productRepository: IProductRepository,
+    @inject(TYPES.ProductFactory) private readonly productFactory: ProductFactory,
+    @inject(TYPES.PaymentMethodRegistry) private readonly paymentMethods: PaymentMethodRegistry,
+    @inject(TYPES.NotificationService) private readonly notificationService: NotificationService,
   ) {}
 
   async execute(input: ProcessOrderInput): Promise<ProcessOrderResult> {

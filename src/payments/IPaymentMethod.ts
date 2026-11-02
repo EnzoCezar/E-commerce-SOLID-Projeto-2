@@ -4,5 +4,6 @@ export interface PaymentDetails {
 }
 
 export interface IPaymentMethod {
+  readonly name: string;
   process(details: PaymentDetails): Promise<void>;
 }

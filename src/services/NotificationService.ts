@@ -1,3 +1,5 @@
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../container/types';
 import { IMailProvider } from '../providers/IMailProvider';
 
 export interface OrderConfirmation {
@@ -7,8 +9,9 @@ export interface OrderConfirmation {
   productNames: string[];
 }
 
+@injectable()
 export class NotificationService {
-  constructor(private readonly mailProvider: IMailProvider) {}
+  constructor(@inject(TYPES.MailProvider) private readonly mailProvider: IMailProvider) {}
 
   async sendOrderConfirmation(order: OrderConfirmation): Promise<string | false> {
     return this.mailProvider.sendMail({

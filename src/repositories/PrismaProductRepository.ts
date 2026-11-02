@@ -1,9 +1,12 @@
 import { PrismaClient } from '@prisma/client';
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../container/types';
 import { ProductData } from '../domain/IProduct';
 import { IProductRepository } from './IProductRepository';
 
+@injectable()
 export class PrismaProductRepository implements IProductRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(@inject(TYPES.PrismaClient) private readonly prisma: PrismaClient) {}
 
   async findById(id: number): Promise<ProductData | null> {
     return this.prisma.product.findUnique({ where: { id } });

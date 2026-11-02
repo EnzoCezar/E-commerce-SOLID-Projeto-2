@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { IProduct, ProductData } from './IProduct';
 import { PhysicalProduct } from './PhysicalProduct';
 import { DigitalProduct } from './DigitalProduct';
@@ -5,6 +6,7 @@ import { BusinessError } from './BusinessError';
 
 type ProductBuilder = (data: ProductData) => IProduct;
 
+@injectable()
 export class ProductFactory {
     private readonly builders: Record<string, ProductBuilder> = {
         physical: (data) => new PhysicalProduct(data),
